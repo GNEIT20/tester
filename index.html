@@ -405,23 +405,20 @@
       spinSound.pause();
       const winner = names[winnerIndex];
 
-      // Remove the winner from the full textarea content (not from BLOCKED_NAMES)
-      // We need to take original textarea lines, remove exactly one matching winner (trimmed)
-      const nameInput = document.getElementById("nameInput");
-      const allLines = nameInput.value.split(/\r?\n/).map(s => s.trim()).filter(s => s);
-      // remove only one instance equal to selected winner (case-sensitive removal of same text form)
-      let removedOnce = false;
-      const remaining = [];
-      for (let line of allLines) {
-        if (!removedOnce && line === winner) {
-          removedOnce = true;
-          continue; // skip this one
-        }
-        // If this line is blocked, skip adding it back to textarea (keeps blocked hidden)
-        const isBlocked = blockedNormalized.includes(line.trim().toLowerCase());
-        if (!isBlocked) remaining.push(line);
-      }
-      nameInput.value = remaining.join("\n");
+      // Remove only the selected winner (blocked names stay untouched)
+const nameInput = document.getElementById("nameInput");
+const allLines = nameInput.value.split(/\r?\n/);
+
+let removed = false;
+const updated = allLines.filter(line => {
+  const trimmed = line.trim();
+  if (!removed && trimmed === winner) {
+    removed = true;
+    return false;
+  }
+  return true;
+});
+nameInput.value = updated.join("\n");
 
       document.getElementById("winnerNameText").textContent = winner;
       document.getElementById("winnerPopup").style.display = "flex";
@@ -460,4 +457,5 @@
 </script>
 </body>
 </html>
+
 
