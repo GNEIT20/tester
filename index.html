@@ -159,15 +159,15 @@
 }
 
     .wheel {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      border: 5px solid #333;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      transition: transform 50s cubic-bezier(0.05, 0.9, 0.1, 1);
-      overflow: hidden;
-      position: relative;
-    }
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 5px solid #333;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0s linear; /* JS will control timing */
+  overflow: hidden;
+  position: relative;
+}
 
     .segment {
       position: absolute;
@@ -355,8 +355,14 @@ const SEGMENT_COUNT = 50;
 let rotation = 0;
 let isSpinning = false;
 
-// 🆕 keep track of names that already won
+// keep track of names that already won
 let wonNames = [];
+
+// spin timing (ms)
+const FAST_SPIN_TIME = 40000; // 0–40s: fast
+const MID_SPIN_TIME  = 9000;  // 40–49s: still spinning, not too slow
+const SNAP_TIME      = 1000;  // 49–50s: quick stop
+const TOTAL_SPIN_TIME = FAST_SPIN_TIME + MID_SPIN_TIME + SNAP_TIME; // 50s total
 
 window.onload = () => {
   document.getElementById("introScreen").style.display = "flex";
@@ -381,9 +387,7 @@ document.getElementById("spinButton").onclick = () => {
   const allNames = getNames();
   const blockedNormalized = BLOCKED_NAMES.map(n => n.trim().toLowerCase());
 
-  // 🆕 Eligible list only for selection:
-  // 1) NOT blocked
-  // 2) NOT already won before
+  // eligible = not blocked, not already won
   const eligibleNames = allNames.filter(n => {
     const norm = n.toLowerCase();
     return !blockedNormalized.includes(norm) && !wonNames.includes(norm);
@@ -402,22 +406,61 @@ document.getElementById("spinButton").onclick = () => {
   countdownSound.currentTime = 0;
   countdownSound.play();
 
-  // 🎲 random winner from eligible list
+  // random winner
   const winnerIndex = Math.floor(Math.random() * eligibleNames.length);
   const winner = eligibleNames[winnerIndex];
 
-  const spinDegrees = 360 * 180 + Math.floor(Math.random() * 360);
-  rotation += spinDegrees;
+  const wheel = document.getElementById("wheel");
+
+  // SPIN LOGIC:
+  // 1) FAST (0–40s): many rotations, linear
+  // 2) MID (40–49s): still spinning, moderate speed
+  // 3) SNAP (49–50s): short easing stop
+  const startRotation = rotation;
+
+  const fastSpinDegrees = 360 * 60; // 60 full spins during fast phase
+  const midExtraDegrees = 360 * 8;  // 8 more spins in mid phase
+  const snapExtraDegrees = 90 + Math.floor(Math.random() * 270); // last partial spin (90°–360°)
+
+  const midRotation   = startRotation + fastSpinDegrees;
+  const snapRotation  = midRotation + midExtraDegrees;
+  const finalRotation = snapRotation + snapExtraDegrees;
+
+  // update global rotation so next spin continues from here
+  rotation = finalRotation;
+
   isSpinning = true;
 
-  document.getElementById("wheel").style.transform = `rotate(${rotation}deg)`;
+  // reset transition & position
+  wheel.style.transition = "none";
+  wheel.style.transform = `rotate(${startRotation}deg)`;
 
+  // let browser apply initial transform first
+  requestAnimationFrame(() => {
+    // STAGE 1: FAST (0–40s)
+    wheel.style.transition = `transform ${FAST_SPIN_TIME / 1000}s linear`;
+    wheel.style.transform = `rotate(${midRotation}deg)`;
+
+    // STAGE 2: MID (40–49s) – still spinning nicely
+    setTimeout(() => {
+      wheel.style.transition = `transform ${MID_SPIN_TIME / 1000}s linear`;
+      wheel.style.transform = `rotate(${snapRotation}deg)`;
+
+      // STAGE 3: SNAP (49–50s) – quick ease stop
+      setTimeout(() => {
+        wheel.style.transition = `transform ${SNAP_TIME / 1000}s cubic-bezier(0.05, 0.9, 0.1, 1)`;
+        wheel.style.transform = `rotate(${finalRotation}deg)`;
+      }, MID_SPIN_TIME);
+    }, FAST_SPIN_TIME);
+  });
+
+  // after total 50s, stop spin & show winner
   setTimeout(() => {
     spinSound.pause();
 
     const nameInput = document.getElementById("nameInput");
 
-    // 🆕 Remove ONLY ONE copy of the winner from the textarea
+    // Remove ONLY ONE copy of the winner from the textarea
     let removed = false;
     const updatedList = allNames.filter(n => {
       if (!removed && n === winner) {
@@ -428,7 +471,7 @@ document.getElementById("spinButton").onclick = () => {
     });
     nameInput.value = updatedList.join("\n");
 
-    // 🆕 Remember this winner so they cannot be chosen again
+    // Remember this winner so they cannot be chosen again
     wonNames.push(winner.toLowerCase());
 
     document.getElementById("winnerNameText").textContent = winner;
@@ -438,7 +481,7 @@ document.getElementById("spinButton").onclick = () => {
     confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
 
     isSpinning = false;
-  }, 50000);
+  }, TOTAL_SPIN_TIME);
 };
 
 function closePopup() {
@@ -447,7 +490,7 @@ function closePopup() {
 
 function clearNames() {
   document.getElementById("nameInput").value = "";
-  // 🆕 optional: also reset winners so everyone can win again if you start over
+  // reset winners if starting over
   wonNames = [];
 }
 
@@ -472,6 +515,7 @@ function drawWheel() {
 </script>
 </body>
 </html>
+
 
 
 
