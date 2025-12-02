@@ -348,13 +348,15 @@ const BLOCKED_NAMES = [
   "Awik Nurhaidah Ismundiyah",
   "Awik Nurhaidah",
   "Raudhah"
-
 ];
 
 const COLORS = ["#ff3838", "#ff9f1a", "#fff200", "#32ff7e", "#18dcff", "#7d5fff", "#e84393"];
 const SEGMENT_COUNT = 50;
 let rotation = 0;
 let isSpinning = false;
+
+// 🆕 keep track of names that already won
+let wonNames = [];
 
 window.onload = () => {
   document.getElementById("introScreen").style.display = "flex";
@@ -379,11 +381,17 @@ document.getElementById("spinButton").onclick = () => {
   const allNames = getNames();
   const blockedNormalized = BLOCKED_NAMES.map(n => n.trim().toLowerCase());
 
-  // Eligible list only for selection (blocked excluded)
-  const eligibleNames = allNames.filter(n => !blockedNormalized.includes(n.toLowerCase()));
+  // 🆕 Eligible list only for selection:
+  // 1) NOT blocked
+  // 2) NOT already won before
+  const eligibleNames = allNames.filter(n => {
+    const norm = n.toLowerCase();
+    return !blockedNormalized.includes(norm) && !wonNames.includes(norm);
+  });
 
   if (eligibleNames.length === 0) {
-    return alert("No eligible names to draw!");
+    alert("No eligible names to draw! (All valid names may have already won.)");
+    return;
   }
 
   const spinSound = document.getElementById("spinSound");
@@ -394,6 +402,7 @@ document.getElementById("spinButton").onclick = () => {
   countdownSound.currentTime = 0;
   countdownSound.play();
 
+  // 🎲 random winner from eligible list
   const winnerIndex = Math.floor(Math.random() * eligibleNames.length);
   const winner = eligibleNames[winnerIndex];
 
@@ -406,10 +415,21 @@ document.getElementById("spinButton").onclick = () => {
   setTimeout(() => {
     spinSound.pause();
 
-    // Remove ONLY the winner from textarea (blocked stays!)
     const nameInput = document.getElementById("nameInput");
-    const updatedList = allNames.filter(n => n !== winner);
+
+    // 🆕 Remove ONLY ONE copy of the winner from the textarea
+    let removed = false;
+    const updatedList = allNames.filter(n => {
+      if (!removed && n === winner) {
+        removed = true;
+        return false;   // skip this one occurrence
+      }
+      return true;      // keep all others (including same name)
+    });
     nameInput.value = updatedList.join("\n");
+
+    // 🆕 Remember this winner so they cannot be chosen again
+    wonNames.push(winner.toLowerCase());
 
     document.getElementById("winnerNameText").textContent = winner;
     document.getElementById("winnerPopup").style.display = "flex";
@@ -427,6 +447,8 @@ function closePopup() {
 
 function clearNames() {
   document.getElementById("nameInput").value = "";
+  // 🆕 optional: also reset winners so everyone can win again if you start over
+  wonNames = [];
 }
 
 function getNames() {
@@ -450,6 +472,7 @@ function drawWheel() {
 </script>
 </body>
 </html>
+
 
 
 
