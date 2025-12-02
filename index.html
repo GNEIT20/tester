@@ -164,7 +164,7 @@
       border-radius: 50%;
       border: 5px solid #333;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      transition: transform 51s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+      transition: transform 50s cubic-bezier(0.05, 0.9, 0.1, 1);
       overflow: hidden;
       position: relative;
     }
@@ -406,7 +406,7 @@ document.getElementById("spinButton").onclick = () => {
   const winnerIndex = Math.floor(Math.random() * eligibleNames.length);
   const winner = eligibleNames[winnerIndex];
 
-  const spinDegrees = 360 * 60 + Math.floor(Math.random() * 360);
+  const spinDegrees = 360 * 180 + Math.floor(Math.random() * 360);
   rotation += spinDegrees;
   isSpinning = true;
 
@@ -472,6 +472,7 @@ function drawWheel() {
 </script>
 </body>
 </html>
+
 
 
 
