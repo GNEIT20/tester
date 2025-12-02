@@ -330,7 +330,7 @@
   </div>
 
   <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
-  <audio id="countdownSound" src="30 sec.MP3"></audio>
+  <audio id="countdownSound" src="50 s.MP3"></audio>
   <audio id="spinSound" src="https://cdn.pixabay.com/audio/2023/09/19/audio_0d6aa6a8c3.mp3" loop></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -438,7 +438,7 @@ document.getElementById("spinButton").onclick = () => {
     confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
 
     isSpinning = false;
-  }, 30000);
+  }, 50000);
 };
 
 function closePopup() {
@@ -472,6 +472,7 @@ function drawWheel() {
 </script>
 </body>
 </html>
+
 
 
 
